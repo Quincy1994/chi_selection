@@ -18,27 +18,31 @@ class Chiextration:
         self.document = {}
         self.document = document
         self.docNum = self.DocNum()
-        self.cateinDoc = {}
+        self.cateinDoc = self.CountCategory()
         self.wordlist = self.Getwordlist()
+
+    def CountCategory(self):##统计文档中每个类别的数目
+        cateinDoc = {}
         for category in Chiextration.categories:
             number = self.CateInDoc(category)
-            self.cateinDoc[category] = number
+            cateinDoc[category] = number
+        return cateinDoc
 
-    def WordInDoc(self, word):
+    def WordInDoc(self, word):##计算单词在所有文档中的频数
         count = 0
         for content in self.document:
             if word in content:
                 count += 1
         return count
 
-    def CateInDoc(self, category):
+    def CateInDoc(self, category): ##计算类别在文档中的数目
         categories = self.document.values()
         return categories.count(category)
 
-    def DocNum(self):
+    def DocNum(self): ##计算文档数目
         return self.document.__len__()
 
-    def WordInCate(self, word, category):
+    def WordInCate(self, word, category):##计算词语在所属类别文档中的频数(不含重复)
         count = 0
         for doc in self.document:
             if self.document[doc] == category:
@@ -46,7 +50,7 @@ class Chiextration:
                     count += 1
         return count
 
-    def CalculateCHI(self, word, category):
+    def CalculateCHI(self, word, category):##计算卡方统计的值
         docNum = self.docNum
         wordInDoc = self.WordInDoc(word) #A+B
         wordNotInDoc = docNum - wordInDoc #C+D
@@ -61,7 +65,7 @@ class Chiextration:
         chi = float(N) / M
         return chi
 
-    def Getwordlist(self):
+    def Getwordlist(self):##得到所有文档的词语集合
         wordlist = []
         for doc in self.document:
             words = doc.split(',')
@@ -69,14 +73,14 @@ class Chiextration:
                 wordlist.append(word)
         return wordlist
 
-    def wordfrequent(self, word, category):
+    def wordfrequent(self, word, category):##计算词语在所属类别文档中的频数(含重复)
         wordlist = self.wordlist
         cateInDoc = self.CateInDoc(category)
         frequent = float(wordlist.count(word))/(cateInDoc+1)
         return frequent
 
 
-    def ImproCalculateCHI(self, word, category):
+    def ImproCalculateCHI(self, word, category): ##改进后的chi,融合了frequency和tfidf
         docNum = self.docNum
         wordInCate = self.WordInCate(word, category) #A
         cateIndoc = self.cateinDoc[category] #A+C
@@ -103,7 +107,7 @@ class Chiextration:
 
 
 
-def SplitWord(sentences):
+def SplitWord(sentences): ##分词并去除停用词和单个词
     stopwordfile = open('../工具/哈工大停用词表.txt','r')
     data = stopwordfile.readlines()
     stopwords = []
@@ -127,20 +131,8 @@ class Feature_selection:
     def __init__(self):
         self.document = {}
         self.wordDict = []
-    # def loadtrainset(self):
-    #     for category in Feature_selection.categories:
-    #         catePath = '/home/quincy1994/文档/微脉圈/训练集/' + category
-    #         catefiles = os.listdir(catePath)
-    #         for catefile in catefiles:
-    #             data = open(catePath+'/'+catefile).read()
-    #             words = SplitWord(data)
-    #             for word in words:
-    #                 self.wordDict.append(word)
-    #             content = ','.join(words)
-    #             self.document[content] = category
-    #     self.wordDict = set(self.wordDict)
 
-    def loadDoc(self):
+    def loadDoc(self): ##加载文档,格式如document.txt
         document = {}
         wordDict = []
         f = codecs.open('document.txt', 'rb', 'utf-8')
@@ -155,11 +147,9 @@ class Feature_selection:
         self.wordDict = set(wordDict)
 
 
-    def fea_selection(self,wordlist):
+    def fea_selection(self,wordlist): ##特征选择,先在加载数据,然后用chi选取特征词
         newwordlist = []
-        # self.loadtrainset()
         self.loadDoc()
-        # print('op')
         chi = Chiextration(self.document)
         for word in wordlist:
             for category in Feature_selection.categories:
